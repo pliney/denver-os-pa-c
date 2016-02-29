@@ -9,7 +9,6 @@ void print_pool(pool_pt pool);
 
 /* main */
 int main(int argc, char *argv[]) {
-
     const unsigned POOL_SIZE = 1000000;
     pool_pt pool = NULL;
 
