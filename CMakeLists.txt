@@ -8,3 +8,4 @@ set(SOURCE_FILES
     main.c mem_pool.c)
 
 add_executable(denver_os_pa_c ${SOURCE_FILES})
+add_definitions(-std=c11)

@@ -102,6 +102,8 @@ alloc_status mem_init() {
     if (pool_store == NULL){
         pool_mgr_pt pool[MEM_POOL_STORE_INIT_CAPACITY];
         pool_store = pool;
+        pool_store_size = 0;
+        pool_store_capacity = MEM_POOL_STORE_INIT_CAPACITY;
         return ALLOC_OK;
     }
     else{
@@ -124,8 +126,14 @@ alloc_status mem_free() {
 }
 
 pool_pt mem_pool_open(size_t size, alloc_policy policy) {
+
     // make sure there the pool store is allocated
+    if (pool_store == NULL){
+        printf("pool store not open\n");
+        return NULL;
+    }
     // expand the pool store, if necessary
+
     struct _pool_mgr new_pool;
 
     // allocate a new mem pool mgr
@@ -264,10 +272,15 @@ void mem_inspect_pool(pool_pt pool,
 /***********************************/
 static alloc_status _mem_resize_pool_store() {
     // check if necessary
-    /*
-                if (((float) pool_store_size / pool_store_capacity)
-                    > MEM_POOL_STORE_FILL_FACTOR) {...}
-     */
+    if (((float) pool_store_size / pool_store_capacity)
+        > MEM_POOL_STORE_FILL_FACTOR) {
+        pool_mgr_pt new_pool[pool_store_capacity * MEM_EXPAND_FACTOR];
+        for (int i = 0; i < pool_store_capacity; i++){
+            new_pool[i] = pool_store[i];
+        }
+        pool_store_capacity = pool_store_capacity*MEM_EXPAND_FACTOR;
+    }
+
     // don't forget to update capacity variables
 
     return ALLOC_FAIL;
