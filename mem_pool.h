@@ -46,7 +46,7 @@ alloc_status
 mem_free();
 
 pool_pt
-mem_pool_open(size_t size, alloc_policy policy);
+mem_pool_open(size_t mem_pool_size, alloc_policy policy);
 
 alloc_status
 mem_pool_close(pool_pt pool);
