@@ -100,7 +100,7 @@ static alloc_status _mem_sort_gap_ix(pool_mgr_pt pool_mgr);
 alloc_status mem_init() {
 
     if (pool_store == NULL){
-        pool_mgr_pt pool[MEM_POOL_STORE_INIT_CAPACITY];
+        pool_mgr_pt pool = (pool_mgr_pt) calloc(MEM_POOL_STORE_INIT_CAPACITY, sizeof(pool_mgr_pt));
         pool_store = pool;
         pool_store_size = 0;
         pool_store_capacity = MEM_POOL_STORE_INIT_CAPACITY;
@@ -133,6 +133,7 @@ pool_pt mem_pool_open(size_t size, alloc_policy policy) {
         return NULL;
     }
     // expand the pool store, if necessary
+    _mem_resize_pool_store();
 
     struct _pool_mgr new_pool;
 
@@ -283,7 +284,7 @@ static alloc_status _mem_resize_pool_store() {
 
     // don't forget to update capacity variables
 
-    return ALLOC_FAIL;
+    return ALLOC_OK;
 }
 
 static alloc_status _mem_resize_node_heap(pool_mgr_pt pool_mgr) {
