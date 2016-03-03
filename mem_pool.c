@@ -7,7 +7,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
-#include <w32api/rpcndr.h>
+//#include <w32api/rpcndr.h>
 #include <stdio.h> // for perror()
 
 #include "mem_pool.h"
@@ -142,35 +142,32 @@ pool_pt mem_pool_open(size_t mem_pool_size, alloc_policy policy) {
     if (new_pool_mgr == NULL){
         return NULL;
     }
+    new_pool_mgr->pool.alloc_size = 10;
+    assert(new_pool_mgr->pool.alloc_size == 10);
 
     // allocate a new memory pool
-    pool_pt new_pool = (pool_pt) malloc(sizeof(pool_t));
-    // check success, on error deallocate mgr and return null
-    if (new_pool == NULL){
-        free(new_pool_mgr);
-        return NULL;
-    }
+//    pool_pt new_pool = (pool_pt) malloc(sizeof(pool_t));
+//    // check success, on error deallocate mgr and return null
+//    if (new_pool == NULL){
+//        free(new_pool_mgr);
+//        return NULL;
+//    }
     // initialize pool memory block, check success, on error deallocate mgr and return null
-    new_pool->mem = (char*) malloc(sizeof(mem_pool_size));
-    if (new_pool->mem == NULL){
-        free(new_pool);
+    char* new_mem_pool = (char*) malloc(sizeof(mem_pool_size));
+
+    if (new_mem_pool == NULL){
         free(new_pool_mgr);
         return NULL;
     }
-    // initialize new_pool constants
-    new_pool->total_size = mem_pool_size;
-    new_pool->alloc_size = 0;
-    new_pool->num_allocs = 0;
-    new_pool->num_gaps = 1;
+
 
     // allocate a new node heap
     node_pt new_node_heap = (node_pt) calloc(MEM_NODE_HEAP_INIT_CAPACITY, sizeof(node_t));
 
     // check success, on error deallocate mgr/pool and return null
     if (new_node_heap == NULL){
+        free(new_pool_mgr->pool.mem);
         free(new_pool_mgr);
-        free(new_pool->mem);
-        free(new_pool);
         return NULL;
     }
 
@@ -178,17 +175,16 @@ pool_pt mem_pool_open(size_t mem_pool_size, alloc_policy policy) {
     gap_pt new_gap_index = (gap_pt) calloc(MEM_GAP_IX_INIT_CAPACITY, sizeof(gap_t));
     // check success, on error deallocate mgr/pool/heap and return null
     if (new_gap_index == NULL){
+        free(new_pool_mgr->pool.mem);
         free(new_pool_mgr);
-        free(new_pool->mem);
-        free(new_pool);
         free(new_node_heap);
         return NULL;
     }
 
     // assign all the pointers and update meta data:
-
     //   initialize top node of node heap
-    new_node_heap[0].alloc_record = NULL;
+    new_node_heap[0].alloc_record.size = mem_pool_size;
+    new_node_heap[0].alloc_record.mem = new_mem_pool;
     new_node_heap[0].used = 1;
     new_node_heap[0].allocated = 0;
     new_node_heap[0].next = NULL;
@@ -198,17 +194,32 @@ pool_pt mem_pool_open(size_t mem_pool_size, alloc_policy policy) {
     new_gap_index[0].size = mem_pool_size;
     new_gap_index[0].node = new_node_heap;
 
-    //   initialize pool mgr
-    new_pool_mgr->pool = *new_pool; //need to release original pool???
+    //   initialize pool mgr pool
+    new_pool_mgr->pool.mem = new_mem_pool;
+    new_pool_mgr->pool.total_size = mem_pool_size;
+    new_pool_mgr->pool.alloc_size = 0;
+    new_pool_mgr->pool.num_allocs = 0;
+    new_pool_mgr->pool.num_gaps = 1;
+
+    // initialize pool mgr
     new_pool_mgr->node_heap = new_node_heap;
     new_pool_mgr->total_nodes = 1;
     new_pool_mgr->used_nodes = 0;
     new_pool_mgr->gap_ix = new_gap_index;
     new_pool_mgr->gap_ix_capacity = MEM_GAP_IX_INIT_CAPACITY;
-    //   link pool mgr to pool store
-    // return the address of the mgr, cast to (pool_pt)
 
-    return NULL;
+    //   link pool mgr to pool store
+    pool_store[pool_store_size] = new_pool_mgr;
+
+    printf("%d\n", new_mem_pool);
+    printf("%d\n", new_pool_mgr->pool.mem);
+    printf("%d\n", new_pool_mgr);
+    printf("%d\n", &new_pool_mgr->pool);
+
+    //assert(sizeof(new_pool_mgr->pool.mem) == mem_pool_size);
+
+    // return the address of the mgr, cast to (pool_pt)
+    return (pool_pt)new_pool_mgr;
 }
 
 alloc_status mem_pool_close(pool_pt pool) {
