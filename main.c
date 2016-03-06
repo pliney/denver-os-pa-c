@@ -29,9 +29,9 @@ int main(int argc, char *argv[]) {
 
 
     print_pool(pool);
-
     // + alloc-0
     alloc_pt alloc0 = mem_new_alloc(pool, 100);
+
     assert(alloc0);
 
     print_pool(pool);
@@ -81,11 +81,11 @@ void print_pool(pool_pt pool) {
 
     assert(segs);
     assert(size);
-
+    printf("%s\n", "hello");
     for (unsigned u = 0; u < size; u ++)
-        printf("%10lu - %s\n", (unsigned long) segs[u].size, (segs[u].allocated) ? "alloc" : "gap");
+        printf("%d %10lu - %s\n", u, (unsigned long) segs[u].size, (segs[u].allocated) ? "alloc" : "gap");
 
     free(segs);
 
-    printf("\n");
+    printf("pool\n");
 }
