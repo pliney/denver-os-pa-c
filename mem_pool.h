@@ -27,7 +27,7 @@ typedef struct _alloc {
 
 typedef struct _pool_segment {
     size_t size;
-    unsigned allocated; // 1-allocation, 0-gap
+    unsigned long allocated; // 1-allocation, 0-gap (note: 8 bytes)
 } pool_segment_t, *pool_segment_pt;
 
 typedef enum _alloc_status {
@@ -46,7 +46,7 @@ alloc_status
 mem_free();
 
 pool_pt
-mem_pool_open(size_t mem_pool_size, alloc_policy policy);
+mem_pool_open(size_t size, alloc_policy policy);
 
 alloc_status
 mem_pool_close(pool_pt pool);

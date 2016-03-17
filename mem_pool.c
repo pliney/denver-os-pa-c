@@ -108,8 +108,7 @@ alloc_status mem_init() {
         return ALLOC_OK;
     }
     else{
-        printf("failed mem_init\n");
-        return ALLOC_FAIL;
+        return ALLOC_CALLED_AGAIN;
     }
 
     // ensure that it's called only once until mem_free
@@ -120,7 +119,7 @@ alloc_status mem_init() {
 alloc_status mem_free() {
     // ensure that it's called only once for each mem_init
     if (pool_store == NULL){
-        return ALLOC_FAIL;
+        return ALLOC_CALLED_AGAIN;
     }
     // make sure all pool managers have been deallocated
     for (int i = 0; i < pool_store_size; i++){
@@ -234,11 +233,11 @@ alloc_status mem_pool_close(pool_pt pool) {
 
     // check if pool has only one gap
     if (pool->num_gaps != 1){
-        return ALLOC_FAIL;
+        return ALLOC_NOT_FREED;
     }
     // check if it has zero allocations
     if (pool->num_allocs != 0){
-        return ALLOC_FAIL;
+        return ALLOC_NOT_FREED;
     }
     // free memory pool
     // free node heap
@@ -289,11 +288,23 @@ alloc_pt mem_new_alloc(pool_pt pool, size_t req_size) {
         }
     }
     // if BEST_FIT, then find the first sufficient node in the gap index
+    if (pool->policy == BEST_FIT){
+        gap_pt gap_array = pool_mgr->gap_ix;
+        int i = pool_mgr->gap_ix_capacity-1;
+        while(alloc_node == NULL){
+            if(gap_array[i].size >= req_size){
+                alloc_node = gap_array[i].node;
+            }
+            i--;
+        }
+    }
 
 
-
-    // check if node found
-    assert(alloc_node != NULL);
+    // if no node found there is not enough space so return null
+    if (alloc_node == NULL){
+        return NULL;
+    }
+    //assert(alloc_node != NULL);
 
     // calculate the size of the remaining gap, if any
     size_t new_gap_size = alloc_node->alloc_record.size - req_size;
@@ -338,7 +349,9 @@ alloc_pt mem_new_alloc(pool_pt pool, size_t req_size) {
     }
 
     // Update pool variables
-    pool_mgr->used_nodes++;
+    if (new_gap_size != 0){
+        pool_mgr->used_nodes++;
+    }
     pool->alloc_size += req_size;
     pool->num_allocs++;
 
@@ -446,16 +459,16 @@ void mem_inspect_pool(pool_pt pool,
 
     node_pt current_node = pool_mgr->node_heap;
 
-    int i = 0;
+    unsigned i = 0;
     while (current_node != NULL && current_node->used == 1){
         segs[i].size = current_node->alloc_record.size;
         segs[i].allocated = current_node->allocated;
         i++;
         current_node = current_node->next;
     }
-    printf("%d\n", i);
-    printf("%d\n", pool_mgr->used_nodes);
-    assert(i == pool_mgr->used_nodes);
+    //("%d\n", i);
+    //printf("%d\n", pool_mgr->used_nodes);
+    //assert(i == pool_mgr->used_nodes);
     *segments = segs;
     *num_segments = pool_mgr->used_nodes;
 }

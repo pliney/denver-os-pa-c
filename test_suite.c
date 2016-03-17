@@ -8,8 +8,8 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
-#include <cmocka.h>
 
+#include "cmocka.h"
 #include "mem_pool.h"
 #include "test_suite.h"
 
@@ -1148,6 +1148,7 @@ static void test_pool_scenario07(void **state) {
 
 
     // 7. allocate 1100
+
     alloc_pt alloc3 = mem_new_alloc(pool, 1100);
     assert_non_null(alloc3);
 
