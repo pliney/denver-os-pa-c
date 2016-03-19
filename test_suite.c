@@ -1701,6 +1701,16 @@ static void test_pool_scenario13(void **state) {
      * 5. Clean up.
      */
 
+    /*
+ * Scenario 14:
+ *
+ * 1. Pool starts out as a single gap.
+ * 2. Allocate 10 x 100.
+ * 3. Deallocate 4, 1, (6, 7, 8) (note: 4 before 1)
+ * 4. Allocate 100.
+ * 5. Clean up.
+ */
+
     pool_segment_t exp0[1] =
             {
                     {pool->total_size, 0},
@@ -2437,7 +2447,7 @@ int run_test_suite() {
 
             cmocka_unit_test_setup_teardown(test_pool_scenario11, pool_bf_setup, pool_bf_teardown),
             cmocka_unit_test_setup_teardown(test_pool_scenario12, pool_bf_setup, pool_bf_teardown),
-            //cmocka_unit_test_setup_teardown(test_pool_scenario13, pool_bf_setup, pool_bf_teardown),
+            cmocka_unit_test_setup_teardown(test_pool_scenario13, pool_bf_setup, pool_bf_teardown),
             cmocka_unit_test_setup_teardown(test_pool_scenario14, pool_bf_setup, pool_bf_teardown),
             cmocka_unit_test_setup_teardown(test_pool_scenario15, pool_bf_setup, pool_bf_teardown),
             cmocka_unit_test_setup_teardown(test_pool_scenario16, pool_bf_setup, pool_bf_teardown),

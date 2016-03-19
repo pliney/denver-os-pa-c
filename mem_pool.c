@@ -290,12 +290,25 @@ alloc_pt mem_new_alloc(pool_pt pool, size_t req_size) {
     // if BEST_FIT, then find the first sufficient node in the gap index
     if (pool->policy == BEST_FIT){
         gap_pt gap_array = pool_mgr->gap_ix;
-        int i = pool_mgr->gap_ix_capacity-1;
-        while(alloc_node == NULL && i >= 0){
+        int i = 0;
+        while(alloc_node == NULL && i < pool_mgr->gap_ix_capacity){
             if(gap_array[i].size >= req_size){
                 alloc_node = gap_array[i].node;
+                if(i < pool_mgr->gap_ix_capacity-1 && gap_array[i+1].size == alloc_node->alloc_record.size){
+                    node_pt current_node = pool_mgr->node_heap;
+                    while (current_node != NULL){
+                        if (current_node->used == 1 && current_node->allocated == 0
+                            && current_node->alloc_record.size == alloc_node->alloc_record.size){
+                            alloc_node = current_node;
+                            current_node = NULL;
+                        }
+                        else{
+                            current_node = current_node->next;
+                        }
+                    }
+                }
             }
-            i--;
+            i++;
         }
     }
 
@@ -579,7 +592,7 @@ static alloc_status _mem_remove_from_gap_ix(pool_mgr_pt pool_mgr,
     // zero out the element at position num_gaps!
     gap_pt gap_array = pool_mgr->gap_ix;
     int found = 0;
-    for (int i = 0; i < pool_mgr->gap_ix_capacity - 1; i++) {
+    for (int i = 0; i < pool_mgr->gap_ix_capacity-1; i++) {
         if (gap_array[i].node == alloc_node) {
             found = 1;
         }
@@ -609,7 +622,7 @@ static alloc_status _mem_sort_gap_ix(pool_mgr_pt pool_mgr) {
     //       swap them (by copying) (remember to use a temporary variable)
     gap_pt gap_array = pool_mgr->gap_ix;
     for (int i = pool_mgr->pool.num_gaps-1; i > 0; i--){
-        if (gap_array[i].size > gap_array[i-1].size){
+        if (gap_array[i].size < gap_array[i-1].size){
             size_t temp_size = gap_array[i].size;
             node_pt temp_node = gap_array[i].node;
             gap_array[i].size = gap_array[i-1].size;
