@@ -264,7 +264,7 @@ alloc_pt mem_new_alloc(pool_pt pool, size_t req_size) {
     // get mgr from pool by casting the pointer to (pool_mgr_pt)
     pool_mgr_pt pool_mgr = (pool_mgr_pt) pool;
     // check if any gaps, return null if none
-    if (pool_mgr->gap_ix->size == 0){
+    if (pool->num_gaps == 0){
         return NULL;
     }
     // expand heap node, if necessary, quit on error
@@ -291,7 +291,7 @@ alloc_pt mem_new_alloc(pool_pt pool, size_t req_size) {
     if (pool->policy == BEST_FIT){
         gap_pt gap_array = pool_mgr->gap_ix;
         int i = pool_mgr->gap_ix_capacity-1;
-        while(alloc_node == NULL){
+        while(alloc_node == NULL && i >= 0){
             if(gap_array[i].size >= req_size){
                 alloc_node = gap_array[i].node;
             }
@@ -349,7 +349,7 @@ alloc_pt mem_new_alloc(pool_pt pool, size_t req_size) {
     }
 
     // Update pool variables
-    if (new_gap_size != 0){
+    if (new_gap_size > 0){
         pool_mgr->used_nodes++;
     }
     pool->alloc_size += req_size;
